@@ -89,12 +89,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/**/*.css",
                         "/**/*.js")
                         .permitAll()
-                    .antMatchers("/api/auth/**")
+                    .antMatchers("/api/auth/**","/swagger-ui.html", 
+                        "/swagger-resources/**")
                         .permitAll()
                     .antMatchers("/api/user/checkUsernameAvailability", "/api/user/checkEmailAvailability")
                         .permitAll()
                     .antMatchers(HttpMethod.GET, "/api/polls/**", "/api/users/**")
                         .permitAll()
+                .antMatchers(HttpMethod.GET, "/v2/api-docs","/spring-security-rest/api/v2/api-docs")
+                .permitAll()
                     .anyRequest()
                         .authenticated();
 
