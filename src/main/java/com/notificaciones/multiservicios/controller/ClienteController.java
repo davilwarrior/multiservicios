@@ -23,7 +23,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.google.firebase.database.*;
+import com.notificaciones.multiservicios.model.LogTransacciones;
+import com.notificaciones.multiservicios.model.MapaParametros;
+import com.notificaciones.multiservicios.model.Parametros;
+import com.notificaciones.multiservicios.model.Servicio;
+import com.notificaciones.multiservicios.objectRequest.InfoConsulta;
 import com.notificaciones.multiservicios.objectRequest.NotificacionRequest;
+import com.notificaciones.multiservicios.repository.LogTransaccionesRepository;
+import com.notificaciones.multiservicios.repository.MapaParametrosRepository;
+import com.notificaciones.multiservicios.repository.ParametrosRepository;
+import com.notificaciones.multiservicios.repository.ServicioRepository;
+import ec.systemnotifyextractor.test.NewMain;
+import ec.systemnotifyextractor.util.DatosEntrada;
+import ec.systemnotifyextractor.util.DatosRespuesta;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.logging.Level;
 
 /**
  *
@@ -33,25 +50,48 @@ import com.notificaciones.multiservicios.objectRequest.NotificacionRequest;
 @RequestMapping("/api/cliente")
 public class ClienteController {
 
+    private final String nombrePaquete = "ec.systemnotifyextractor.manager";
     @Autowired
     ClienteRepository clienteRepository;
 
     @Autowired
     UserRepository userRepository;
+    
+    @Autowired
+     ServicioRepository servicioRepository;
+
+    @Autowired
+     ParametrosRepository parametrosRepository;
+    
+    @Autowired
+    LogTransaccionesRepository logTransaccionesRepository;
+    
+    
+    @Autowired
+     MapaParametrosRepository mapaparametrosRepository;
 
     @PostMapping("/cliente")
     private Cliente guardarCliente(@Valid @RequestBody ClienteRequest cliente) {
         Cliente c = new Cliente();
-        c.setApellidos(cliente.getApellido());
-        c.setNombres(cliente.getNombre());
+
+        c.setApellidos(cliente.getApellidos());
+        c.setNombres(cliente.getNombres());
         c.setCedula(cliente.getCedula());
         c.setUser(userRepository.findById(cliente.getUser()).get());
+        c.setTelefono(cliente.getTelefono());
         return clienteRepository.save(c);
     }
 
     @GetMapping("/clientes")
     public List<Cliente> allClientes() {
         return clienteRepository.findAll();
+    }
+
+    @GetMapping("/cliente/{id}")
+    public Cliente getCliente(@PathVariable(value = "id") Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente", "id", id));
+        return cliente;
     }
 
     @PutMapping("/cliente/{id}")
@@ -82,40 +122,115 @@ public class ClienteController {
     }
 
     public void enviarNotificacionCliente(NotificacionRequest notif, Long id_cliente) {
+        System.out.println("------------------------------------");
+        System.out.println(id_cliente);
+        System.out.println("------------------------------------");
+        Cliente cliente = clienteRepository.findById(id_cliente).get();
 
+        String id = java.util.UUID.randomUUID().toString();
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         String reference = id_cliente.toString() + "/"
                 + notif.getCedula() + "/"
                 + notif.getEmpresa() + "/"
-                + "servicios/"+notif.getServicio();
+                + "servicios/" + notif.getServicio() + "-" + id;
 
         String fechaNotif = reference + "/fecha_notificacion";
         DatabaseReference ref = database.getReference(fechaNotif);
 
 //        cliente/descripcion/direccion_cliente/telefono/NONE/tiempo_estimado_motorizado => NONE va el tiempo estimado del pedido, en este caso es none
-        
         ref.setValue(notif.getFecha_notificacion());
-        int cont=0;
-        reference+="/infoAdicional";
+        int cont = 0;
+        reference += "/infoAdicional";
         for (String key : notif.getInfo_adicional().keySet()) {
-            ref = database.getReference("/"+reference+"/"+key);
+            ref = database.getReference("/" + reference + "/" + key);
             ref.setValue(notif.getInfo_adicional().get(key));
         }
-       
 
-//        ref.push().setValue(new NotificacionMotorizado(
-//                parts_descripcion[0],
-//                parts_descripcion[1],
-//                parts_descripcion[2],
-//                parts_descripcion[5],
-//                parts_descripcion[3],
-//                ubicacion,
-//                sucursal.getNombre(),
-//                pedido.getIdPedido(),
-//                key_pedido,
-//                id_sucursal
-//        ));
+        String datosEntrada = notif.getCedula() + "/" + notif.getEmpresa() + "/" + notif.getServicio();
+//        guardarLogTransaccion(notif.getCedula(), id_cliente,  id, reference, notif.getFecha_notificacion());
+
+    }
+
+    public LogTransacciones guardarLogTransaccion(String datosEntrada, Long id_cliente, String uuid, String datosSalida, String fecha_notificacion) {
+
+        LogTransacciones lt = new LogTransacciones();
+        lt.setCodigoUUID(uuid);
+        lt.setEstado("A"); //A=Activo N=Notificado
+        System.out.println("Cliente: " + id_cliente);
+        //Cliente client = this.getCliente(id_cliente);
+
+        //System.out.println("_____----------- "+id_cliente);
+        //lt.setCliente(client);
+        lt.setDatosEntrada(datosEntrada);
+        lt.setDatosSalida(datosSalida);
+        lt.setFecha_notificacion(fecha_notificacion);
+        return logTransaccionesRepository.save(lt);
+
+    }
+
+    public DatosRespuesta consultar( DatosEntrada datosEntrada) {
+           try {
+               
+               
+               
+            Class clase = Class.forName(this.nombrePaquete + "." + datosEntrada.getNombreEntidad());
+            Object instancia = clase.newInstance();
+            Method method = clase.getMethod("execute", DatosEntrada.class);
+            DatosRespuesta datosRespuesta = (DatosRespuesta) method.invoke(instancia, new Object[]{datosEntrada});
+            return datosRespuesta;
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException ex) {
+            java.util.logging.Logger.getLogger(NewMain.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return new DatosRespuesta(true, "");
+    }
+
+    @PostMapping("/recuperar")
+    public DatosRespuesta recuperarDatosEntrada (@Valid @RequestBody InfoConsulta info){
         
         
+    Servicio s = servicioRepository.findById(info.getIdServicio()).get();
+    
+    
+    
+    String url = s.getUrl();
+    List<Parametros> parametros = parametrosRepository.findByServicio(s.getId_servicio());
+    
+    HashMap<String,Object> mapaParametros = this.getMapaParametros(parametros);
+    
+    DatosEntrada datosEntrada = new DatosEntrada();
+    datosEntrada.setUrlConsultar(url);
+    datosEntrada.setDatos(mapaParametros);
+    
+    datosEntrada.setNombreEntidad(s.getNombreEntidad());
+    datosEntrada.setIdServicio(s.getId_servicio().toString());
+    
+    datosEntrada.setFechaTransacion(new Date());
+    
+    NotificacionRequest notif = new NotificacionRequest();
+    
+    notif.setCedula("0105785794");
+    notif.setEmpresa(datosEntrada.getNombreEntidad());
+    notif.setServicio(datosEntrada.getIdServicio());
+    notif.setFecha_notificacion(datosEntrada.getFechaTransacion().toString());
+    notif.setInfo_adicional(mapaParametros);
+   enviarNotificacionCliente(notif, 1L);
+    
+    return consultar(datosEntrada);
+    }
+    
+    public HashMap<String,Object> getMapaParametros(List<Parametros> parametros){
+    
+    HashMap<String,Object> mapaParam = new HashMap<>();
+    for (Parametros parametro : parametros) {
+            List<MapaParametros> mps = mapaparametrosRepository.findByParametro(parametro.getId_param());
+            for (MapaParametros mp : mps) {
+                        mapaParam.put(mp.getClave(), mp.getValor());
+
+        }
+        }
+    
+    
+    
+    return mapaParam;
     }
 }

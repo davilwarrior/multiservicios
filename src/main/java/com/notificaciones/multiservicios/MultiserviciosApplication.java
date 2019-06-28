@@ -35,22 +35,22 @@ public class MultiserviciosApplication {
         FirebaseApp.initializeApp(options);
         
         //Prueba
-        NotificacionRequest nr= new NotificacionRequest();
-        nr.setCedula("0105785794");
-        nr.setEmpresa("SRI");
-        nr.setFecha_notificacion("2019-06-28");
-        nr.setServicio("DeclaracionIVA");
-        
-        HashMap<String,Object> hashMap= new HashMap<>();
-        hashMap.put("Doctor", "Juan Pablo Japa");
-        hashMap.put("Especialidad", "Proctólogo");
-        hashMap.put("Lugar", "IESS");
-        
-        nr.setInfo_adicional(hashMap);
-        
-        ClienteController cc = new ClienteController();
-        Long id_cliente = 1L;
-        cc.enviarNotificacionCliente(nr,id_cliente);
+//        NotificacionRequest nr= new NotificacionRequest();
+//        nr.setCedula("0105785794");
+//        nr.setEmpresa("SRI");
+//        nr.setFecha_notificacion("2019-06-28");
+//        nr.setServicio("DeclaracionIVA");
+//        
+//        HashMap<String,Object> hashMap= new HashMap<>();
+//        hashMap.put("Doctor", "Juan Pablo Japa");
+//        hashMap.put("Especialidad", "Proctólogo");
+//        hashMap.put("Lugar", "IESS");
+//        
+//        nr.setInfo_adicional(hashMap);
+//        
+//        ClienteController cc = new ClienteController();
+//        
+//        cc.enviarNotificacionCliente(nr,1L);
         SpringApplication.run(MultiserviciosApplication.class, args);
     }
 

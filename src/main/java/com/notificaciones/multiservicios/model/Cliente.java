@@ -6,12 +6,17 @@
 package com.notificaciones.multiservicios.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
@@ -47,6 +52,12 @@ public class Cliente extends DateAudit implements Serializable{
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "usuario", referencedColumnName = "id")
     private User user;
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "cliente_servicios",
+            joinColumns = @JoinColumn(name = "id_cliente"),
+            inverseJoinColumns = @JoinColumn(name = "id_servicio"))
+    private Set<Servicio> servicios = new HashSet<>();
 
     public Cliente() {
     }
@@ -98,6 +109,14 @@ public class Cliente extends DateAudit implements Serializable{
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public Set<Servicio> getServicios() {
+        return servicios;
+    }
+
+    public void setServicios(Set<Servicio> servicios) {
+        this.servicios = servicios;
     }
     
     

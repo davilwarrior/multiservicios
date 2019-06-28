@@ -10,25 +10,27 @@ package com.notificaciones.multiservicios.objectRequest;
  * @author David
  */
 public class ClienteRequest {
-    String nombre;
-    String apellido;
+    String nombres;
+    String apellidos;
     String cedula;
     Long user;
+    String telefono;
+    
 
-    public String getNombre() {
-        return nombre;
+    public String getNombres() {
+        return nombres;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setNombres(String nombre) {
+        this.nombres = nombre;
     }
 
-    public String getApellido() {
-        return apellido;
+    public String getApellidos() {
+        return apellidos;
     }
 
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public void setApellidos(String apellido) {
+        this.apellidos = apellido;
     }
 
     public String getCedula() {
@@ -45,6 +47,14 @@ public class ClienteRequest {
 
     public void setUser(Long user) {
         this.user = user;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
     
 }
