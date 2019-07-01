@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -43,6 +44,7 @@ public class Cliente extends DateAudit implements Serializable{
     
     @NotBlank
     @Size(max = 15)
+    @Column(unique = true)
     private String cedula;
     
     @NotBlank

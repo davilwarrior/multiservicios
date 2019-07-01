@@ -15,6 +15,8 @@ public class InfoConsulta {
     HashMap<String, Object> map;
     
     Long idServicio;
+    
+    Long idUsuario;
 
     public HashMap<String, Object> getMap() {
         return map;
@@ -30,6 +32,14 @@ public class InfoConsulta {
 
     public void setIdServicio(Long idServicio) {
         this.idServicio = idServicio;
+    }
+
+    public Long getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(Long idUsuario) {
+        this.idUsuario = idUsuario;
     }
 
     

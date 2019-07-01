@@ -7,6 +7,7 @@ package com.notificaciones.multiservicios.repository;
 
 import com.notificaciones.multiservicios.model.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  *
@@ -14,4 +15,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ClienteRepository extends JpaRepository<Cliente, Long>{
     
+    @Query("")
+    Cliente getClientexIDUsuario(Long idUsuario);
 }

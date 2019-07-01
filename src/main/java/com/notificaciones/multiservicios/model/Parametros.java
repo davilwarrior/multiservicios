@@ -27,7 +27,7 @@ import org.hibernate.annotations.OnDeleteAction;
  */
 @Entity
 @Table(name = "parametros")
-//@NamedQuery(name="as",query="SELECT p FROM MapaParametros p WHERE p.parametro.id_mparam ")
+//@NamedQuery(name="as",query="SELECT v FROM Valores v WHERE v.servicio.id_servicio=1 and v.cliente.id_cliente ")
 public class Parametros extends DateAudit implements Serializable{
 
     @Id

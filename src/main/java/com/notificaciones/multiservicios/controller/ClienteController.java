@@ -27,15 +27,19 @@ import com.notificaciones.multiservicios.model.LogTransacciones;
 import com.notificaciones.multiservicios.model.MapaParametros;
 import com.notificaciones.multiservicios.model.Parametros;
 import com.notificaciones.multiservicios.model.Servicio;
+import com.notificaciones.multiservicios.model.Valores;
+import com.notificaciones.multiservicios.model.User;
 import com.notificaciones.multiservicios.objectRequest.InfoConsulta;
 import com.notificaciones.multiservicios.objectRequest.NotificacionRequest;
 import com.notificaciones.multiservicios.repository.LogTransaccionesRepository;
 import com.notificaciones.multiservicios.repository.MapaParametrosRepository;
 import com.notificaciones.multiservicios.repository.ParametrosRepository;
 import com.notificaciones.multiservicios.repository.ServicioRepository;
+import com.notificaciones.multiservicios.repository.ValoresRepository;
 import ec.systemnotifyextractor.test.NewMain;
 import ec.systemnotifyextractor.util.DatosEntrada;
 import ec.systemnotifyextractor.util.DatosRespuesta;
+import ec.systemnotifyextractor.util.DatosSalida;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -69,6 +73,10 @@ public class ClienteController {
     
     @Autowired
      MapaParametrosRepository mapaparametrosRepository;
+    
+    @Autowired
+     ValoresRepository valoresRepository;
+    
 
     @PostMapping("/cliente")
     private Cliente guardarCliente(@Valid @RequestBody ClienteRequest cliente) {
@@ -189,13 +197,16 @@ public class ClienteController {
         
         
     Servicio s = servicioRepository.findById(info.getIdServicio()).get();
-    
-    
+//        System.out.println("Servicio: "+s.getCategoria());
+//        System.out.println("Servicio: "+s.getNombreEntidad());
+//        System.out.println("Servicio: "+s.getUrl());
+//    
     
     String url = s.getUrl();
     List<Parametros> parametros = parametrosRepository.findByServicio(s.getId_servicio());
+       
     
-    HashMap<String,Object> mapaParametros = this.getMapaParametros(parametros);
+    HashMap<String,Object> mapaParametros = this.getMapaParametros(info.getIdUsuario(),s.getId_servicio());
     
     DatosEntrada datosEntrada = new DatosEntrada();
     datosEntrada.setUrlConsultar(url);
@@ -207,26 +218,34 @@ public class ClienteController {
     datosEntrada.setFechaTransacion(new Date());
     
     NotificacionRequest notif = new NotificacionRequest();
-    
+    User u = userRepository.findById(info.getIdUsuario()).get();
     notif.setCedula("0105785794");
     notif.setEmpresa(datosEntrada.getNombreEntidad());
     notif.setServicio(datosEntrada.getIdServicio());
     notif.setFecha_notificacion(datosEntrada.getFechaTransacion().toString());
     notif.setInfo_adicional(mapaParametros);
-   enviarNotificacionCliente(notif, 1L);
     
-    return consultar(datosEntrada);
+    DatosRespuesta datosRespuesta = consultar(datosEntrada);
+     List<DatosSalida> datosSalidas = datosRespuesta.getDatosSalidas();
+        for (DatosSalida datosSalida : datosSalidas) {
+           notif.setInfo_adicional(datosSalida.getValores());
+           enviarNotificacionCliente(notif, 1L);
+        }
+   
+    
+        
+   
+    return datosRespuesta;
     }
     
-    public HashMap<String,Object> getMapaParametros(List<Parametros> parametros){
+    public HashMap<String,Object> getMapaParametros(Long idCliente, Long idServicio){
     
     HashMap<String,Object> mapaParam = new HashMap<>();
-    for (Parametros parametro : parametros) {
-            List<MapaParametros> mps = mapaparametrosRepository.findByParametro(parametro.getId_param());
-            for (MapaParametros mp : mps) {
-                        mapaParam.put(mp.getClave(), mp.getValor());
-
-        }
+    List<Valores> lval= valoresRepository.getValoresbyClienteServicio(idServicio,idCliente);
+    for (Valores valor : lval) {
+        System.out.println("clave: "+valor.getCampo());
+        System.out.println("valor: "+valor.getValor());
+        mapaParam.put(valor.getCampo(), valor.getValor());
         }
     
     
